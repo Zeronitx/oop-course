@@ -12,14 +12,12 @@ public class Doctor
     public Speciality Speciality { get; set; }
     public string LicenseNumber { get; set; }
     public string Phone { get; set; }
-    public int WorkStartHour { get; set; }
-    public int WorkEndHour { get; set; }
+
+    public WorkSchedule Schedule { get; set; }
 
     public string FullName => $"{FirstName} {LastName}";
-    public int WorkingHoursPerDay => WorkEndHour - WorkStartHour;
-    public string WorkSchedule => $"{WorkStartHour:D2}:00-{WorkEndHour:D2}:00";
 
-    public bool IsAvailableNow => CanAcceptAt(DateTime.Now.Hour);
+    public bool IsAvailableNow => Schedule.IsNow;
 
     public Doctor(string firstName, string lastName, Speciality speciality, string licenseNumber, string phone)
     {
@@ -29,8 +27,7 @@ public class Doctor
         Speciality = speciality;
         LicenseNumber = licenseNumber;
         Phone = phone;
-        WorkStartHour = 8;
-        WorkEndHour = 17;
+        Schedule = new WorkSchedule(8, 17);
     }
 
     public Doctor(string firstName, string lastName, Speciality speciality)
@@ -45,12 +42,12 @@ public class Doctor
 
     public bool CanAcceptAt(int hour)
     {
-        return hour >= WorkStartHour && hour < WorkEndHour;
+        return Schedule.Contains(hour);
     }
 
     public override string ToString()
     {
         string status = IsAvailableNow ? "available now" : "not in working hours";
-        return $"[{Id}] {FullName} | {Speciality} | {LicenseNumber} | Phone: {Phone} | {WorkSchedule} ({WorkingHoursPerDay} hrs) | {status}";
+        return $"[{Id}] {FullName} | {Speciality} | {LicenseNumber} | Phone: {Phone} | {Schedule} | {status}";
     }
 }
