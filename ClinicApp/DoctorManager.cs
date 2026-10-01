@@ -10,6 +10,15 @@ public class DoctorManager
 
     public int Count => _count;
 
+    public Doctor? this[int index]
+    {
+        get
+        {
+            if (index >= 0 && index < _count) return _doctors[index];
+            return null;
+        }
+    }
+
     public void Add(Doctor doctor)
     {
         if (_count >= MaxDoctors)
@@ -31,14 +40,20 @@ public class DoctorManager
         return null;
     }
 
-    public Doctor[] FindBySpeciality(string speciality)
+    public bool TryFindById(int id, out Doctor doctor)
     {
-        string search = speciality.ToLower();
+        doctor = FindById(id)!;
+        return doctor != null;
+    }
+
+    public Doctor[] FindBySpeciality(string specialityQuery)
+    {
+        string search = specialityQuery.ToLower();
         int matchCount = 0;
 
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower().Contains(search))
+            if (_doctors[i].Speciality.ToString().ToLower().Contains(search))
             {
                 matchCount++;
             }
@@ -48,10 +63,27 @@ public class DoctorManager
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower().Contains(search))
+            if (_doctors[i].Speciality.ToString().ToLower().Contains(search))
             {
                 result[index++] = _doctors[i];
             }
+        }
+        return result;
+    }
+
+    public Doctor[] FindBySpeciality(Speciality speciality)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality) matchCount++;
+        }
+
+        Doctor[] result = new Doctor[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality) result[index++] = _doctors[i];
         }
         return result;
     }
@@ -126,7 +158,7 @@ public class DoctorManager
             bool isUnique = true;
             for (int j = 0; j < i; j++)
             {
-                if (_doctors[i].Speciality.ToLower() == _doctors[j].Speciality.ToLower())
+                if (_doctors[i].Speciality == _doctors[j].Speciality)
                 {
                     isUnique = false;
                     break;
@@ -138,7 +170,7 @@ public class DoctorManager
                 int specCount = 0;
                 for (int k = 0; k < _count; k++)
                 {
-                    if (_doctors[k].Speciality.ToLower() == _doctors[i].Speciality.ToLower())
+                    if (_doctors[k].Speciality == _doctors[i].Speciality)
                     {
                         specCount++;
                     }

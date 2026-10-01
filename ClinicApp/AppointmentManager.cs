@@ -13,6 +13,15 @@ public class AppointmentManager
 
     public int Count => _count;
 
+    public Appointment? this[int index]
+    {
+        get
+        {
+            if (index >= 0 && index < _count) return _appointments[index];
+            return null;
+        }
+    }
+
     public AppointmentManager(PatientManager patients, DoctorManager doctors)
     {
         _patients = patients;
@@ -127,6 +136,11 @@ public class AppointmentManager
             if (_appointments[i].ScheduledAt.Date == date.Date) result[index++] = _appointments[i];
         }
         return result;
+    }
+
+    public Appointment[] GetByDate(int year, int month, int day)
+    {
+        return GetByDate(new DateTime(year, month, day));
     }
 
     public Appointment[] GetUpcoming()

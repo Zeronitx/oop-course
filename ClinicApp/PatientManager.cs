@@ -10,6 +10,15 @@ public class PatientManager
 
     public int Count => _count;
 
+    public Patient? this[int index]
+    {
+        get
+        {
+            if (index >= 0 && index < _count) return _patients[index];
+            return null;
+        }
+    }
+
     public void Add(Patient patient)
     {
         if (_count >= MaxPatients)
@@ -29,6 +38,12 @@ public class PatientManager
             if (_patients[i].Id == id) return _patients[i];
         }
         return null;
+    }
+
+    public bool TryFindById(int id, out Patient patient)
+    {
+        patient = FindById(id)!;
+        return patient != null;
     }
 
     public Patient[] FindByName(string name)
@@ -54,6 +69,23 @@ public class PatientManager
             {
                 result[index++] = _patients[i];
             }
+        }
+        return result;
+    }
+
+    public Patient[] FindByBloodType(BloodType bloodType)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_patients[i].BloodType == bloodType) matchCount++;
+        }
+
+        Patient[] result = new Patient[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_patients[i].BloodType == bloodType) result[index++] = _patients[i];
         }
         return result;
     }
