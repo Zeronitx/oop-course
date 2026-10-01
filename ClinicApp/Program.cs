@@ -29,11 +29,25 @@ class Program
         clinic.Appointments.Book(2, 2, new DateTime(2026, 5, 9, 11, 0, 0), 45);
         clinic.Appointments.Book(3, 3, new DateTime(2026, 5, 10, 9, 0, 0), 20);
 
-        Console.WriteLine("\n=== Testing Task 3 Indexers ===");
-        Patient? firstPatient = clinic.Patients[0];
-        Console.WriteLine($"clinic.Patients[0] -> {(firstPatient != null ? firstPatient.FullName : "null")}");
+        Console.WriteLine("\n=== Testing Task 4 ===");
 
-        Patient? invalidPatient = clinic.Patients[999];
-        Console.WriteLine($"clinic.Patients[999] -> {(invalidPatient != null ? invalidPatient.FullName : "null")}");
+        Doctor[] cardiologists = clinic.Doctors.FindBySpeciality(Speciality.Cardiology);
+        Console.WriteLine($"Found {cardiologists.Length} cardiologists using enum.");
+
+        Appointment[] todayApps = clinic.Appointments.GetByDate(2026, 5, 9);
+        Console.WriteLine($"Found {todayApps.Length} appointments for 2026-05-09 using overloaded GetByDate.");
+
+        if (clinic.Patients.TryFindById(3, out Patient p))
+        {
+            Console.WriteLine($"TryFindById success: {p.FullName}");
+        }
+
+        if (!clinic.Doctors.TryFindById(99, out Doctor d))
+        {
+            Console.WriteLine("TryFindById properly handled non-existent doctor.");
+        }
+
+        string missingName = clinic.Patients.FindById(99)?.FullName ?? "Patient not found";
+        Console.WriteLine($"Testing ?. and ??: {missingName}");
     }
 }
