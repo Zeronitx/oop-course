@@ -6,14 +6,6 @@ class Program
 {
     static void Main()
     {
-        Console.WriteLine("=== Testing struct WorkSchedule ===");
-        WorkSchedule morning = new WorkSchedule(8, 16);
-        WorkSchedule copy = morning;
-
-        Console.WriteLine($"Morning: {morning}");
-        Console.WriteLine($"Copy:    {copy}");
-        Console.WriteLine($"Is it working time now for morning shift? {morning.IsNow}\n");
-
         Clinic clinic = new Clinic("Medical Clinic");
 
         clinic.Patients.Add(new Patient("Ivan", "Petrenko", new DateTime(1985, 5, 10), BloodType.APositive, "0501234567"));
@@ -37,7 +29,11 @@ class Program
         clinic.Appointments.Book(2, 2, new DateTime(2026, 5, 9, 11, 0, 0), 45);
         clinic.Appointments.Book(3, 3, new DateTime(2026, 5, 10, 9, 0, 0), 20);
 
-        clinic.DisplaySchedule(new DateTime(2026, 5, 9));
-        clinic.GenerateReport();
+        Console.WriteLine("\n=== Testing Task 3 Indexers ===");
+        Patient? firstPatient = clinic.Patients[0];
+        Console.WriteLine($"clinic.Patients[0] -> {(firstPatient != null ? firstPatient.FullName : "null")}");
+
+        Patient? invalidPatient = clinic.Patients[999];
+        Console.WriteLine($"clinic.Patients[999] -> {(invalidPatient != null ? invalidPatient.FullName : "null")}");
     }
 }

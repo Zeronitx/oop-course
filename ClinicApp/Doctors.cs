@@ -48,6 +48,6 @@ public class Doctor
     public override string ToString()
     {
         string status = IsAvailableNow ? "available now" : "not in working hours";
-        return $"[{Id}] {FullName} | {Speciality} | {LicenseNumber} | Phone: {Phone} | {Schedule} | {status}";
+        return $"[{Id}] {FullName} | {ClinicFormatter.FormatSpeciality(Speciality)} | {LicenseNumber} | Phone: {ClinicFormatter.FormatPhone(Phone)} | {Schedule} | {status}";
     }
 }
