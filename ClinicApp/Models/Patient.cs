@@ -20,8 +20,7 @@ public class Patient
         get => _firstName;
         set
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
-                throw new ArgumentException("Invalid First Name.", nameof(FirstName));
+            ClinicValidator.ValidateName(value, nameof(FirstName));
             _firstName = value;
         }
     }
@@ -31,8 +30,7 @@ public class Patient
         get => _lastName;
         set
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
-                throw new ArgumentException("Invalid Last Name.", nameof(LastName));
+            ClinicValidator.ValidateName(value, nameof(LastName));
             _lastName = value;
         }
     }
@@ -42,8 +40,7 @@ public class Patient
         get => _dateOfBirth;
         set
         {
-            if (value.Date > DateTime.Today || value.Year < 1900)
-                throw new ArgumentOutOfRangeException(nameof(DateOfBirth), "Date of Birth must be between 1900 and today.");
+            ClinicValidator.ValidateDate(value, nameof(DateOfBirth));
             _dateOfBirth = value;
         }
     }
@@ -55,13 +52,7 @@ public class Patient
         get => _phone;
         set
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length != 10)
-                throw new ArgumentException("Phone must be exactly 10 characters.", nameof(Phone));
-            foreach (char c in value)
-            {
-                if (!char.IsDigit(c))
-                    throw new ArgumentException("Phone must contain only digits.", nameof(Phone));
-            }
+            ClinicValidator.ValidatePhone(value);
             _phone = value;
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using ClinicApp.Enums;
+using ClinicApp.Utils;
 
 namespace ClinicApp.Models;
 
@@ -18,8 +19,7 @@ public class Appointment
         get => _durationMinutes;
         set
         {
-            if (value <= 0)
-                throw new ArgumentOutOfRangeException(nameof(DurationMinutes), "Duration must be greater than 0.");
+            ClinicValidator.ValidatePositive(value, nameof(DurationMinutes));
             _durationMinutes = value;
         }
     }
@@ -35,11 +35,11 @@ public class Appointment
         PatientId = patientId;
         DoctorId = doctorId;
         ScheduledAt = scheduledAt;
-        DurationMinutes = durationMinutes; // Тут спрацює перевірка
+        DurationMinutes = durationMinutes;
         Status = AppointmentStatus.Scheduled;
         Notes = "";
 
-        Id = _nextId++; // Присвоюємо Id лише якщо всі перевірки пройшли успішно
+        Id = _nextId++;
     }
 
     public bool Cancel(string reason = "")
