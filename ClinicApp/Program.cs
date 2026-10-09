@@ -1,4 +1,8 @@
 ﻿using System;
+using ClinicApp;
+using ClinicApp.Models;
+using ClinicApp.Managers;
+using ClinicApp.Enums;
 
 namespace ClinicApp;
 
