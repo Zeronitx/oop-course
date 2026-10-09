@@ -18,19 +18,34 @@ public class Patient
     public string FirstName
     {
         get => _firstName;
-        set => _firstName = value;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
+                throw new ArgumentException("Invalid First Name.", nameof(FirstName));
+            _firstName = value;
+        }
     }
 
     public string LastName
     {
         get => _lastName;
-        set => _lastName = value;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
+                throw new ArgumentException("Invalid Last Name.", nameof(LastName));
+            _lastName = value;
+        }
     }
 
     public DateTime DateOfBirth
     {
         get => _dateOfBirth;
-        set => _dateOfBirth = value;
+        set
+        {
+            if (value.Date > DateTime.Today || value.Year < 1900)
+                throw new ArgumentOutOfRangeException(nameof(DateOfBirth), "Date of Birth must be between 1900 and today.");
+            _dateOfBirth = value;
+        }
     }
 
     public BloodType BloodType { get; set; }
@@ -38,7 +53,17 @@ public class Patient
     public string Phone
     {
         get => _phone;
-        set => _phone = value;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length != 10)
+                throw new ArgumentException("Phone must be exactly 10 characters.", nameof(Phone));
+            foreach (char c in value)
+            {
+                if (!char.IsDigit(c))
+                    throw new ArgumentException("Phone must contain only digits.", nameof(Phone));
+            }
+            _phone = value;
+        }
     }
 
     public string Email { get; set; } = string.Empty;
@@ -62,12 +87,13 @@ public class Patient
 
     public Patient(string firstName, string lastName, DateTime dob, BloodType bloodType, string phone)
     {
-        Id = _nextId++;
         FirstName = firstName;
         LastName = lastName;
         DateOfBirth = dob;
         BloodType = bloodType;
         Phone = phone;
+
+        Id = _nextId++;
     }
 
     public Patient(string firstName, string lastName)
