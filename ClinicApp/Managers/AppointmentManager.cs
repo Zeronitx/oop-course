@@ -176,6 +176,57 @@ public class AppointmentManager
         return result;
     }
 
+    public Appointment[] GetUrgent()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment) matchCount++;
+        }
+
+        Appointment[] result = new Appointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment) result[index++] = _appointments[i];
+        }
+        return result;
+    }
+
+    public Appointment[] GetSpecialist()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment) matchCount++;
+        }
+
+        Appointment[] result = new Appointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment) result[index++] = _appointments[i];
+        }
+        return result;
+    }
+
+    public Appointment[] GetRegular()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment) matchCount++;
+        }
+
+        Appointment[] result = new Appointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment) result[index++] = _appointments[i];
+        }
+        return result;
+    }
+
     public void DisplayAppointment(Appointment appt)
     {
         Patient? p = _patients.FindById(appt.PatientId);
@@ -184,7 +235,7 @@ public class AppointmentManager
         string pName = p != null ? p.FullName : $"Patient #{appt.PatientId}";
         string dName = d != null ? d.FullName : $"Doctor #{appt.DoctorId}";
 
-        string baseInfo = $"[{appt.Id}] {pName} -> {dName} | {appt.ScheduledAt:dd.MM.yyyy HH:mm}-{appt.EndsAt:HH:mm} | {appt.Status}";
+        string baseInfo = $"[{appt.Id}] {appt.GetDescription()} | {pName} -> {dName} | {appt.ScheduledAt:dd.MM.yyyy HH:mm}-{appt.EndsAt:HH:mm} | {appt.Status} | {appt.GetCost():F2} грн";
 
         if (appt.Notes.Length > 0)
         {
