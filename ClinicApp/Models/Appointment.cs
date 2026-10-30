@@ -35,6 +35,12 @@ public class Appointment : IPayable, ICancellable
     public bool IsCancelled => Status == AppointmentStatus.Cancelled;
     public string CancellationReason => IsCancelled ? Notes : "";
 
+    // Варіант А: Множник знижки в базовому класі.
+    // Обрано цей варіант, бо він дозволяє додавати знижку (наприклад, 0.8 для VIP) 
+    // до будь-якого типу прийому без зміни конструкторів підкласів. 
+    // Оскільки підкласи використовують base.GetCost(), знижка застосується автоматично.
+    public decimal DiscountMultiplier { get; set; } = 1.0m;
+
     public Appointment(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
     {
         PatientId = patientId;
@@ -48,9 +54,19 @@ public class Appointment : IPayable, ICancellable
         Id = _nextId++;
     }
 
-    public decimal GetCost()
+    public virtual decimal GetCost()
     {
-        return DurationMinutes * 10m;
+        return DurationMinutes * 10m * DiscountMultiplier;
+    }
+
+    public virtual string GetDescription()
+    {
+        return "Прийом";
+    }
+
+    public int GetPriority()
+    {
+        return 3;
     }
 
     public void MarkPaid()
@@ -83,7 +99,7 @@ public class Appointment : IPayable, ICancellable
 
     public override string ToString()
     {
-        string baseInfo = $"[{Id}] Patient #{PatientId} -> Doctor #{DoctorId} | {ScheduledAt:dd.MM.yyyy HH:mm}-{EndsAt:HH:mm} | {Status}";
+        string baseInfo = $"[{Id}] {GetDescription()} | Patient #{PatientId} -> Doctor #{DoctorId} | {ScheduledAt:dd.MM.yyyy HH:mm}-{EndsAt:HH:mm} | {Status} | {GetCost():F2} грн";
         if (Notes.Length > 0)
         {
             return $"{baseInfo} | {Notes}";
