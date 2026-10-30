@@ -25,11 +25,28 @@ class Program
         clinic.Doctors.Add(new Doctor("Natalia", "Moroz", Speciality.Neurology));
 
         clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(10), 30);
-        clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(11), 45);
-        clinic.Appointments.Book(2, 2, DateTime.Today.AddDays(2).AddHours(9), 20);
+        clinic.Appointments.BookUrgent(1, 1, DateTime.Today.AddDays(1).AddHours(11), "біль у грудях", 30);
+        clinic.Appointments.BookSpecialist(2, 2, DateTime.Today.AddDays(2).AddHours(9), "кардіологія", 45);
 
         clinic.MedicalRecords.Add(new Diagnosis(1, 1, DateTime.Today.AddDays(-30), "I10", "Гіпертонічна хвороба", true));
         clinic.MedicalRecords.Add(new LabResult(1, 1, DateTime.Today, "Гемоглобін", 145, "г/л", "120–160", true));
+
+        Console.WriteLine("\n== new vs override ==");
+        UrgentAppointment testUrgent = new UrgentAppointment(1, 1, DateTime.Today.AddDays(3), "тест");
+        Appointment asBase = testUrgent;
+
+        Console.WriteLine($"Через Appointment:       {asBase.GetDescription()} | пріоритет {asBase.GetPriority()}");
+        Console.WriteLine($"Через UrgentAppointment: {testUrgent.GetDescription()} | пріоритет {testUrgent.GetPriority()}");
+
+        /*
+        Відповіді:
+        1. Чому GetDescription() через Appointment дає опис термінового?
+           Тому що метод позначений як virtual/override. Виклик спрямовується до реалізації фактичного типу об'єкта в пам'яті (UrgentAppointment) під час виконання, незалежно від типу посилання.
+        2. Чому GetPriority() через ту саму змінну повертає 3?
+           Тому що метод прихований за допомогою new. Він не є віртуальним, тому компілятор обирає метод на етапі компіляції виключно за типом змінної (Appointment).
+        3. Що треба змінити, щоб GetPriority() теж працював поліморфно?
+           Додати слово virtual до GetPriority() у класі Appointment, а в UrgentAppointment замінити слово new на override.
+        */
 
         while (true)
         {

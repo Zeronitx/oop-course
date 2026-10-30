@@ -40,7 +40,7 @@ public class AppointmentManager
         return null;
     }
 
-    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    private bool TryAddAppointment(Appointment appt)
     {
         if (_count >= MaxAppointments)
         {
@@ -48,25 +48,38 @@ public class AppointmentManager
             return false;
         }
 
-        Patient? patient = _patients.FindById(patientId);
+        Patient? patient = _patients.FindById(appt.PatientId);
         if (patient == null)
         {
-            Console.WriteLine($"Error: Patient with ID {patientId} not found.");
+            Console.WriteLine($"Error: Patient with ID {appt.PatientId} not found.");
             return false;
         }
 
-        Doctor? doctor = _doctors.FindById(doctorId);
+        Doctor? doctor = _doctors.FindById(appt.DoctorId);
         if (doctor == null)
         {
-            Console.WriteLine($"Error: Doctor with ID {doctorId} not found.");
+            Console.WriteLine($"Error: Doctor with ID {appt.DoctorId} not found.");
             return false;
         }
 
-        Appointment appt = new Appointment(patientId, doctorId, scheduledAt, durationMinutes);
         _appointments[_count++] = appt;
-
-        Console.WriteLine($"Appointment [{appt.Id}] booked: {patient.FullName} -> {doctor.FullName} at {scheduledAt:dd.MM.yyyy HH:mm}");
+        Console.WriteLine($"Appointment [{appt.Id}] booked: {patient.FullName} -> {doctor.FullName} at {appt.ScheduledAt:dd.MM.yyyy HH:mm}");
         return true;
+    }
+
+    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    {
+        return TryAddAppointment(new RegularAppointment(patientId, doctorId, scheduledAt, durationMinutes));
+    }
+
+    public bool BookUrgent(int patientId, int doctorId, DateTime scheduledAt, string urgencyNote = "", int durationMinutes = 30)
+    {
+        return TryAddAppointment(new UrgentAppointment(patientId, doctorId, scheduledAt, urgencyNote, durationMinutes));
+    }
+
+    public bool BookSpecialist(int patientId, int doctorId, DateTime scheduledAt, string topic = "", int durationMinutes = 45)
+    {
+        return TryAddAppointment(new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes));
     }
 
     public bool Cancel(int id, string reason = "")
