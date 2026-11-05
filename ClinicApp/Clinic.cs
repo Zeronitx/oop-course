@@ -12,6 +12,7 @@ public class Clinic
     public AppointmentManager Appointments { get; }
     public MedicalRecordManager MedicalRecords { get; }
     public BillingManager Billing { get; }
+    public WaitingQueue<Patient> WaitingRoom { get; }
 
     public Clinic(string name)
     {
@@ -21,5 +22,6 @@ public class Clinic
         Appointments = new AppointmentManager(Patients, Doctors);
         MedicalRecords = new MedicalRecordManager();
         Billing = new BillingManager(Appointments);
+        WaitingRoom = new WaitingQueue<Patient>();
     }
 }
