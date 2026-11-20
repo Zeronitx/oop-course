@@ -8,6 +8,7 @@ using ClinicApp.Managers;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
 using ClinicApp.Comparators;
+using ClinicApp.Utils;
 
 namespace ClinicApp;
 
@@ -35,19 +36,20 @@ class Program
 
         while (true)
         {
-            Console.WriteLine("\n╔══════════════════════════════════════════════╗");
-            Console.WriteLine("║           МЕДИЧНА КЛІНІКА                    ║");
-            Console.WriteLine("╠══════════════════════════════════════════════╣");
-            Console.WriteLine("║  1. Пацієнти       — реєстрація, пошук       ║");
-            Console.WriteLine("║  2. Лікарі         — персонал, розклад       ║");
-            Console.WriteLine("║  3. Записи         — прийоми, скасування     ║");
-            Console.WriteLine("║  4. Медична картка — діагнози, рецепти       ║");
-            Console.WriteLine("║  5. Рахунки        — оплата, борги           ║");
-            Console.WriteLine("║  6. Черга          — очікування, прийом      ║");
-            Console.WriteLine("║  7. Звіт           — загальна статистика     ║");
-            Console.WriteLine("║  8. Аналітика      — рейтинги, витрати       ║");
-            Console.WriteLine("║  0. Вийти                                    ║");
-            Console.WriteLine("╚══════════════════════════════════════════════╝");
+            Console.WriteLine("\n╔══════════════════════════════════════════════════╗");
+            Console.WriteLine("║               МЕДИЧНА КЛІНІКА                    ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════╣");
+            Console.WriteLine("║  1. Пацієнти        — реєстрація, пошук          ║");
+            Console.WriteLine("║  2. Лікарі          — персонал, розклад          ║");
+            Console.WriteLine("║  3. Записи          — прийоми, скасування        ║");
+            Console.WriteLine("║  4. Медична картка  — діагнози, рецепти          ║");
+            Console.WriteLine("║  5. Рахунки         — оплата, борги              ║");
+            Console.WriteLine("║  6. Черга           — очікування, прийом         ║");
+            Console.WriteLine("║  7. Звіт            — загальна статистика        ║");
+            Console.WriteLine("║  8. Аналітика       — рейтинги, витрати          ║");
+            Console.WriteLine("║  9. Плани лікування — рефлексія, атрибути        ║");
+            Console.WriteLine("║  0. Вийти                                        ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════╝");
             Console.Write("Оберіть: ");
 
             string choice = Console.ReadLine() ?? "";
@@ -79,11 +81,108 @@ class Program
                 case "8":
                     AnalyticsMenu(clinic);
                     break;
+                case "9":
+                    TreatmentPlansMenu(clinic);
+                    break;
                 case "0":
                     return;
                 default:
                     Console.WriteLine("Невідома команда.");
                     break;
+            }
+        }
+    }
+
+    static void TreatmentPlansMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n── Плани лікування ────────────────────");
+            Console.WriteLine("  1. Показати всі плани");
+            Console.WriteLine("  2. Додати план лікування");
+            Console.WriteLine("  3. Плани пацієнта");
+            Console.WriteLine("  4. Активувати план");
+            Console.WriteLine("  5. Завершити план");
+            Console.WriteLine("  6. Скасувати план");
+            Console.WriteLine("  7. Інформація про тип TreatmentPlan");
+            Console.WriteLine("  0. Назад");
+            Console.Write("Оберіть: ");
+
+            string choice = Console.ReadLine() ?? "";
+            if (choice == "0") return;
+
+            if (choice == "1")
+            {
+                TreatmentPlan[] plans = clinic.TreatmentPlans.GetAll();
+                if (plans.Length == 0)
+                {
+                    Console.WriteLine("Планів лікування немає.");
+                }
+                else
+                {
+                    for (int i = 0; i < plans.Length; i++) Console.WriteLine(plans[i]);
+                }
+            }
+            else if (choice == "2")
+            {
+                TreatmentPlan plan = FormBuilder.Build<TreatmentPlan>();
+                if (clinic.TreatmentPlans.Add(plan))
+                {
+                    Console.WriteLine($"План лікування [{plan.Id}] додано.");
+                }
+            }
+            else if (choice == "3")
+            {
+                Console.Write("ID пацієнта: ");
+                if (!int.TryParse(Console.ReadLine(), out int pid))
+                {
+                    Console.WriteLine("Помилка: некоректне число.");
+                    continue;
+                }
+
+                TreatmentPlan[] plans = clinic.TreatmentPlans.GetByPatient(pid);
+                if (plans.Length == 0)
+                {
+                    Console.WriteLine("Планів для цього пацієнта не знайдено.");
+                }
+                else
+                {
+                    for (int i = 0; i < plans.Length; i++) Console.WriteLine(plans[i]);
+                }
+            }
+            else if (choice == "4" || choice == "5" || choice == "6")
+            {
+                Console.Write("ID плану: ");
+                if (!int.TryParse(Console.ReadLine(), out int id))
+                {
+                    Console.WriteLine("Помилка: некоректне число.");
+                    continue;
+                }
+
+                TreatmentPlan? plan = clinic.TreatmentPlans.GetById(id);
+                if (plan == null)
+                {
+                    Console.WriteLine("План не знайдено.");
+                    continue;
+                }
+
+                bool ok = false;
+                if (choice == "4") ok = plan.Activate();
+                else if (choice == "5") ok = plan.Complete();
+                else if (choice == "6") ok = plan.Cancel();
+
+                if (ok)
+                {
+                    Console.WriteLine($"Статус плану [{plan.Id}] змінено на {plan.Status}.");
+                }
+                else
+                {
+                    Console.WriteLine($"Неможливо змінити статус із {plan.Status}.");
+                }
+            }
+            else if (choice == "7")
+            {
+                ModelValidator.PrintInfo(typeof(TreatmentPlan));
             }
         }
     }
