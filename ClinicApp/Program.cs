@@ -9,6 +9,7 @@ using ClinicApp.Enums;
 using ClinicApp.Interfaces;
 using ClinicApp.Comparators;
 using ClinicApp.Utils;
+using ClinicApp.Events;
 
 namespace ClinicApp;
 
@@ -20,14 +21,13 @@ class Program
         Console.OutputEncoding = Encoding.UTF8;
 
         Clinic clinic = new Clinic("Medical Clinic");
+        clinic.Appointments.AppointmentBooked += OnAppointmentBookedConsole;
 
         Patient p1 = new Patient("Ivan", "Petrenko", new DateTime(1985, 5, 10), BloodType.APositive, "0501234567");
         clinic.Patients.Add(p1);
-        clinic.Logger.LogInfo($"Додано пацієнта #{p1.Id}: {p1.FullName}");
 
         Patient p2 = new Patient("Olena", "Koval", new DateTime(1993, 8, 22), BloodType.BNegative, "0672345678");
         clinic.Patients.Add(p2);
-        clinic.Logger.LogInfo($"Додано пацієнта #{p2.Id}: {p2.FullName}");
 
         Doctor d1 = new Doctor("Oleh", "Sydorenko", Speciality.Cardiology);
         clinic.Doctors.Add(d1);
@@ -37,12 +37,9 @@ class Program
         clinic.Doctors.Add(d2);
         clinic.Logger.LogInfo($"Додано лікаря #{d2.Id}: {d2.FullName}");
 
-        if (clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(10), 30))
-            clinic.Logger.LogInfo("Запис створено: пацієнт #1 -> лікар #1");
-        if (clinic.Appointments.BookUrgent(1, 1, DateTime.Today.AddDays(1).AddHours(11), "біль у грудях", 30))
-            clinic.Logger.LogInfo("Терміновий запис створено: пацієнт #1 -> лікар #1");
-        if (clinic.Appointments.BookSpecialist(2, 2, DateTime.Today.AddDays(2).AddHours(9), "кардіологія", 45))
-            clinic.Logger.LogInfo("Запис до спеціаліста створено: пацієнт #2 -> лікар #2");
+        clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(10), 30);
+        clinic.Appointments.BookUrgent(1, 1, DateTime.Today.AddDays(1).AddHours(11), "біль у грудях", 30);
+        clinic.Appointments.BookSpecialist(2, 2, DateTime.Today.AddDays(2).AddHours(9), "кардіологія", 45);
 
         clinic.MedicalRecords.Add(new Diagnosis(1, 1, DateTime.Today.AddDays(-30), "I10", "Гіпертонічна хвороба", true));
         clinic.MedicalRecords.Add(new LabResult(1, 1, DateTime.Today, "Гемоглобін", 145, "г/л", "120–160", true));
@@ -114,6 +111,8 @@ class Program
                     FilesMenu(clinic);
                     break;
                 case "0":
+                    clinic.Tracker.PrintSummary();
+                    clinic.Tracker.SaveSummary();
                     Console.Write("Зберегти сесію? (y/n): ");
                     string saveAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
                     if (saveAnswer == "y")
@@ -128,6 +127,11 @@ class Program
                     break;
             }
         }
+    }
+
+    static void OnAppointmentBookedConsole(object? sender, AppointmentEventArgs e)
+    {
+        Console.WriteLine($"  [EVENT] Запис #{e.AppointmentId} створено: пацієнт #{e.PatientId} → лікар #{e.DoctorId}, {e.ScheduledAt:dd.MM.yyyy HH:mm}");
     }
 
     static void FilesMenu(Clinic clinic)
@@ -191,6 +195,7 @@ class Program
             }
         }
     }
+
     static void TreatmentPlansMenu(Clinic clinic)
     {
         while (true)
@@ -271,13 +276,16 @@ class Program
 
                 bool ok = false;
                 if (choice == "4") ok = plan.Activate();
-                else if (choice == "5") ok = plan.Complete();
+                else if (choice == "5") ok = clinic.TreatmentPlans.Complete(id);
                 else if (choice == "6") ok = plan.Cancel();
 
                 if (ok)
                 {
                     Console.WriteLine($"Статус плану [{plan.Id}] змінено на {plan.Status}.");
-                    clinic.Logger.LogInfo($"Статус плану #{plan.Id} змінено на {plan.Status}");
+                    if (choice != "5")
+                    {
+                        clinic.Logger.LogInfo($"Статус плану #{plan.Id} змінено на {plan.Status}");
+                    }
                 }
                 else
                 {
@@ -536,9 +544,8 @@ class Program
                 Console.Write("Причина (Enter — без причини): ");
                 string reason = Console.ReadLine() ?? "";
 
-                int cancelled = AppointmentManager.CancelAll(clinic.Appointments.GetByPatient(pid), reason);
+                int cancelled = clinic.Appointments.CancelAll(clinic.Appointments.GetByPatient(pid), reason);
                 Console.WriteLine($"Скасовано записів: {cancelled}");
-                clinic.Logger.LogInfo($"Скасовано {cancelled} записів пацієнта #{pid}");
             }
             else if (choice == "9")
             {
@@ -609,7 +616,6 @@ class Program
                 if (success)
                 {
                     Console.WriteLine($"Запис [{aid}] оплачено.");
-                    clinic.Logger.LogInfo($"Оплачено запис #{aid}");
                 }
                 else
                 {
