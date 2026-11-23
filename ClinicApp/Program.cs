@@ -111,6 +111,8 @@ class Program
                     FilesMenu(clinic);
                     break;
                 case "0":
+                    clinic.Tracker.PrintSummary();
+                    clinic.Tracker.SaveSummary();
                     Console.Write("Зберегти сесію? (y/n): ");
                     string saveAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
                     if (saveAnswer == "y")
