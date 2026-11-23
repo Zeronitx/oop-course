@@ -47,6 +47,18 @@ class Program
         clinic.MedicalRecords.Add(new Diagnosis(1, 1, DateTime.Today.AddDays(-30), "I10", "Гіпертонічна хвороба", true));
         clinic.MedicalRecords.Add(new LabResult(1, 1, DateTime.Today, "Гемоглобін", 145, "г/л", "120–160", true));
 
+        if (clinic.Session.Exists())
+        {
+            Console.Write("Знайдено збережену сесію. Завантажити? (y/n): ");
+            string loadAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
+            if (loadAnswer == "y")
+            {
+                int loaded = clinic.Session.Load(clinic);
+                Console.WriteLine($"Завантажено {loaded} пацієнтів.");
+                clinic.Logger.LogInfo($"Завантажено сесію: додано {loaded} пацієнтів");
+            }
+        }
+
         while (true)
         {
             Console.WriteLine("\n╔══════════════════════════════════════════════════╗");
@@ -102,6 +114,14 @@ class Program
                     FilesMenu(clinic);
                     break;
                 case "0":
+                    Console.Write("Зберегти сесію? (y/n): ");
+                    string saveAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
+                    if (saveAnswer == "y")
+                    {
+                        clinic.Session.Save(clinic);
+                        Console.WriteLine("Сесію збережено.");
+                        clinic.Logger.LogInfo("Сесію збережено");
+                    }
                     return;
                 default:
                     Console.WriteLine("Невідома команда.");
