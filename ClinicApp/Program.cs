@@ -21,18 +21,43 @@ class Program
 
         Clinic clinic = new Clinic("Medical Clinic");
 
-        clinic.Patients.Add(new Patient("Ivan", "Petrenko", new DateTime(1985, 5, 10), BloodType.APositive, "0501234567"));
-        clinic.Patients.Add(new Patient("Olena", "Koval", new DateTime(1993, 8, 22), BloodType.BNegative, "0672345678"));
+        Patient p1 = new Patient("Ivan", "Petrenko", new DateTime(1985, 5, 10), BloodType.APositive, "0501234567");
+        clinic.Patients.Add(p1);
+        clinic.Logger.LogInfo($"Додано пацієнта #{p1.Id}: {p1.FullName}");
 
-        clinic.Doctors.Add(new Doctor("Oleh", "Sydorenko", Speciality.Cardiology));
-        clinic.Doctors.Add(new Doctor("Natalia", "Moroz", Speciality.Neurology));
+        Patient p2 = new Patient("Olena", "Koval", new DateTime(1993, 8, 22), BloodType.BNegative, "0672345678");
+        clinic.Patients.Add(p2);
+        clinic.Logger.LogInfo($"Додано пацієнта #{p2.Id}: {p2.FullName}");
 
-        clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(10), 30);
-        clinic.Appointments.BookUrgent(1, 1, DateTime.Today.AddDays(1).AddHours(11), "біль у грудях", 30);
-        clinic.Appointments.BookSpecialist(2, 2, DateTime.Today.AddDays(2).AddHours(9), "кардіологія", 45);
+        Doctor d1 = new Doctor("Oleh", "Sydorenko", Speciality.Cardiology);
+        clinic.Doctors.Add(d1);
+        clinic.Logger.LogInfo($"Додано лікаря #{d1.Id}: {d1.FullName}");
+
+        Doctor d2 = new Doctor("Natalia", "Moroz", Speciality.Neurology);
+        clinic.Doctors.Add(d2);
+        clinic.Logger.LogInfo($"Додано лікаря #{d2.Id}: {d2.FullName}");
+
+        if (clinic.Appointments.Book(1, 1, DateTime.Today.AddDays(1).AddHours(10), 30))
+            clinic.Logger.LogInfo("Запис створено: пацієнт #1 -> лікар #1");
+        if (clinic.Appointments.BookUrgent(1, 1, DateTime.Today.AddDays(1).AddHours(11), "біль у грудях", 30))
+            clinic.Logger.LogInfo("Терміновий запис створено: пацієнт #1 -> лікар #1");
+        if (clinic.Appointments.BookSpecialist(2, 2, DateTime.Today.AddDays(2).AddHours(9), "кардіологія", 45))
+            clinic.Logger.LogInfo("Запис до спеціаліста створено: пацієнт #2 -> лікар #2");
 
         clinic.MedicalRecords.Add(new Diagnosis(1, 1, DateTime.Today.AddDays(-30), "I10", "Гіпертонічна хвороба", true));
         clinic.MedicalRecords.Add(new LabResult(1, 1, DateTime.Today, "Гемоглобін", 145, "г/л", "120–160", true));
+
+        if (clinic.Session.Exists())
+        {
+            Console.Write("Знайдено збережену сесію. Завантажити? (y/n): ");
+            string loadAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
+            if (loadAnswer == "y")
+            {
+                int loaded = clinic.Session.Load(clinic);
+                Console.WriteLine($"Завантажено {loaded} пацієнтів.");
+                clinic.Logger.LogInfo($"Завантажено сесію: додано {loaded} пацієнтів");
+            }
+        }
 
         while (true)
         {
@@ -48,6 +73,7 @@ class Program
             Console.WriteLine("║  7. Звіт            — загальна статистика        ║");
             Console.WriteLine("║  8. Аналітика       — рейтинги, витрати          ║");
             Console.WriteLine("║  9. Плани лікування — рефлексія, атрибути        ║");
+            Console.WriteLine("║ 10. Файли           — логи, звіти, імпорт        ║");
             Console.WriteLine("║  0. Вийти                                        ║");
             Console.WriteLine("╚══════════════════════════════════════════════════╝");
             Console.Write("Оберіть: ");
@@ -84,7 +110,18 @@ class Program
                 case "9":
                     TreatmentPlansMenu(clinic);
                     break;
+                case "10":
+                    FilesMenu(clinic);
+                    break;
                 case "0":
+                    Console.Write("Зберегти сесію? (y/n): ");
+                    string saveAnswer = (Console.ReadLine() ?? "").Trim().ToLower();
+                    if (saveAnswer == "y")
+                    {
+                        clinic.Session.Save(clinic);
+                        Console.WriteLine("Сесію збережено.");
+                        clinic.Logger.LogInfo("Сесію збережено");
+                    }
                     return;
                 default:
                     Console.WriteLine("Невідома команда.");
@@ -93,6 +130,67 @@ class Program
         }
     }
 
+    static void FilesMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n── Файли ──────────────────────────────");
+            Console.WriteLine("  1. Останні рядки лога");
+            Console.WriteLine("  2. Очистити лог");
+            Console.WriteLine("  3. Експортувати всі звіти");
+            Console.WriteLine("  4. Імпорт пацієнтів з CSV");
+            Console.WriteLine("  0. Назад");
+            Console.Write("Оберіть: ");
+
+            string choice = Console.ReadLine() ?? "";
+            if (choice == "0") return;
+
+            if (choice == "1")
+            {
+                Console.Write("Скільки останніх рядків показати: ");
+                if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
+                {
+                    Console.WriteLine("Помилка: некоректне число.");
+                    clinic.Logger.LogWarning("Помилка введення: некоректна кількість рядків лога.");
+                    continue;
+                }
+
+                string[] lines = clinic.Logger.GetLastLines(n);
+                if (lines.Length == 0)
+                {
+                    Console.WriteLine("Лог порожній або файл не існує.");
+                }
+                else
+                {
+                    for (int i = 0; i < lines.Length; i++) Console.WriteLine(lines[i]);
+                }
+            }
+            else if (choice == "2")
+            {
+                clinic.Logger.Clear();
+                Console.WriteLine("Лог очищено.");
+            }
+            else if (choice == "3")
+            {
+                string[] paths = clinic.Exporter.ExportAll();
+                Console.WriteLine("Звіти експортовано:");
+                for (int i = 0; i < paths.Length; i++)
+                {
+                    Console.WriteLine($"  {paths[i]}");
+                }
+                clinic.Logger.LogInfo($"Експортовано {paths.Length} звітів");
+            }
+            else if (choice == "4")
+            {
+                Console.Write("Шлях до CSV-файлу: ");
+                string path = Console.ReadLine() ?? "";
+
+                ImportResult result = CsvImporter.ImportPatients(clinic, path);
+                result.Print();
+                clinic.Logger.LogInfo($"Імпорт CSV ({path}): імпортовано {result.Imported}, пропущено {result.Skipped}");
+            }
+        }
+    }
     static void TreatmentPlansMenu(Clinic clinic)
     {
         while (true)
@@ -129,6 +227,11 @@ class Program
                 if (clinic.TreatmentPlans.Add(plan))
                 {
                     Console.WriteLine($"План лікування [{plan.Id}] додано.");
+                    clinic.Logger.LogInfo($"Додано план лікування #{plan.Id} для пацієнта #{plan.PatientId}");
+                }
+                else
+                {
+                    clinic.Logger.LogWarning("Спроба додати невалідний план лікування.");
                 }
             }
             else if (choice == "3")
@@ -174,6 +277,7 @@ class Program
                 if (ok)
                 {
                     Console.WriteLine($"Статус плану [{plan.Id}] змінено на {plan.Status}.");
+                    clinic.Logger.LogInfo($"Статус плану #{plan.Id} змінено на {plan.Status}");
                 }
                 else
                 {
@@ -289,6 +393,7 @@ class Program
                 {
                     clinic.WaitingRoom.Enqueue(p);
                     Console.WriteLine($"Пацієнта {p.FullName} додано до черги.");
+                    clinic.Logger.LogInfo($"Пацієнта #{p.Id} додано до черги");
                 }
             }
             else if (choice == "2")
@@ -297,10 +402,12 @@ class Program
                 {
                     Patient p = clinic.WaitingRoom.Dequeue();
                     Console.WriteLine($"Прийнято: {p.FullName}. У черзі лишилось: {clinic.WaitingRoom.Count}");
+                    clinic.Logger.LogInfo($"Прийнято з черги пацієнта #{p.Id}");
                 }
                 catch (InvalidOperationException ex)
                 {
                     Console.WriteLine(ex.Message);
+                    clinic.Logger.LogWarning($"Помилка черги: {ex.Message}");
                 }
             }
             else if (choice == "3")
@@ -313,6 +420,7 @@ class Program
                 catch (InvalidOperationException ex)
                 {
                     Console.WriteLine(ex.Message);
+                    clinic.Logger.LogWarning($"Помилка черги: {ex.Message}");
                 }
             }
             else if (choice == "4")
@@ -392,6 +500,7 @@ class Program
                 catch (ArgumentOutOfRangeException ex)
                 {
                     Console.WriteLine($"Помилка: {ex.Message}");
+                    clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                 }
             }
         }
@@ -429,6 +538,7 @@ class Program
 
                 int cancelled = AppointmentManager.CancelAll(clinic.Appointments.GetByPatient(pid), reason);
                 Console.WriteLine($"Скасовано записів: {cancelled}");
+                clinic.Logger.LogInfo($"Скасовано {cancelled} записів пацієнта #{pid}");
             }
             else if (choice == "9")
             {
@@ -499,10 +609,12 @@ class Program
                 if (success)
                 {
                     Console.WriteLine($"Запис [{aid}] оплачено.");
+                    clinic.Logger.LogInfo($"Оплачено запис #{aid}");
                 }
                 else
                 {
                     Console.WriteLine("Не вдалося оплатити: запис не знайдено, вже оплачено або скасовано.");
+                    clinic.Logger.LogWarning($"Невдала спроба оплати запису #{aid}");
                 }
             }
             else if (choice == "4")
