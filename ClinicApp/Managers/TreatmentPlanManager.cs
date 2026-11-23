@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ClinicApp.Models;
 using ClinicApp.Enums;
 using ClinicApp.Utils;
+using ClinicApp.Events;
 
 namespace ClinicApp.Managers;
 
 public class TreatmentPlanManager
 {
     private List<TreatmentPlan> _plans = new List<TreatmentPlan>();
+
+    public event EventHandler<TreatmentPlanEventArgs>? PlanCompleted;
 
     public bool Add(TreatmentPlan plan)
     {
@@ -19,6 +23,17 @@ public class TreatmentPlanManager
         }
 
         _plans.Add(plan);
+        return true;
+    }
+
+    public bool Complete(int planId)
+    {
+        TreatmentPlan? plan = GetById(planId);
+        if (plan == null) return false;
+
+        if (!plan.Complete()) return false;
+
+        PlanCompleted?.Invoke(this, new TreatmentPlanEventArgs(plan.Id, plan.PatientId, plan.Diagnosis));
         return true;
     }
 
