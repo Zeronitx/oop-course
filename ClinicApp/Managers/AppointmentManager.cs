@@ -2,6 +2,7 @@
 using ClinicApp.Models;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
+using ClinicApp.Events;
 
 namespace ClinicApp.Managers;
 
@@ -13,6 +14,8 @@ public class AppointmentManager
 
     private PatientManager _patients;
     private DoctorManager _doctors;
+
+    public event EventHandler<AppointmentEventArgs>? AppointmentBooked;
 
     public int Count => _count;
 
@@ -40,7 +43,7 @@ public class AppointmentManager
         return null;
     }
 
-    private bool TryAddAppointment(Appointment appt)
+    private bool TryAddAppointment(Appointment appt, string notes = "")
     {
         if (_count >= MaxAppointments)
         {
@@ -64,6 +67,7 @@ public class AppointmentManager
 
         _appointments[_count++] = appt;
         Console.WriteLine($"Appointment [{appt.Id}] booked: {patient.FullName} -> {doctor.FullName} at {appt.ScheduledAt:dd.MM.yyyy HH:mm}");
+        AppointmentBooked?.Invoke(this, new AppointmentEventArgs(appt.Id, appt.PatientId, appt.DoctorId, appt.ScheduledAt, notes));
         return true;
     }
 
@@ -74,12 +78,12 @@ public class AppointmentManager
 
     public bool BookUrgent(int patientId, int doctorId, DateTime scheduledAt, string urgencyNote = "", int durationMinutes = 30)
     {
-        return TryAddAppointment(new UrgentAppointment(patientId, doctorId, scheduledAt, urgencyNote, durationMinutes));
+        return TryAddAppointment(new UrgentAppointment(patientId, doctorId, scheduledAt, urgencyNote, durationMinutes), urgencyNote);
     }
 
     public bool BookSpecialist(int patientId, int doctorId, DateTime scheduledAt, string topic = "", int durationMinutes = 45)
     {
-        return TryAddAppointment(new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes));
+        return TryAddAppointment(new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes), topic);
     }
 
     public bool Cancel(int id, string reason = "")

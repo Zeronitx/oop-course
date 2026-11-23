@@ -9,6 +9,7 @@ using ClinicApp.Enums;
 using ClinicApp.Interfaces;
 using ClinicApp.Comparators;
 using ClinicApp.Utils;
+using ClinicApp.Events;
 
 namespace ClinicApp;
 
@@ -20,6 +21,7 @@ class Program
         Console.OutputEncoding = Encoding.UTF8;
 
         Clinic clinic = new Clinic("Medical Clinic");
+        clinic.Appointments.AppointmentBooked += OnAppointmentBookedConsole;
 
         Patient p1 = new Patient("Ivan", "Petrenko", new DateTime(1985, 5, 10), BloodType.APositive, "0501234567");
         clinic.Patients.Add(p1);
@@ -130,6 +132,11 @@ class Program
         }
     }
 
+    static void OnAppointmentBookedConsole(object? sender, AppointmentEventArgs e)
+    {
+        Console.WriteLine($"  [EVENT] Запис #{e.AppointmentId} створено: пацієнт #{e.PatientId} → лікар #{e.DoctorId}, {e.ScheduledAt:dd.MM.yyyy HH:mm}");
+    }
+
     static void FilesMenu(Clinic clinic)
     {
         while (true)
@@ -191,6 +198,7 @@ class Program
             }
         }
     }
+
     static void TreatmentPlansMenu(Clinic clinic)
     {
         while (true)
