@@ -71,6 +71,7 @@ class Program
             Console.WriteLine("║  8. Аналітика       — рейтинги, витрати          ║");
             Console.WriteLine("║  9. Плани лікування — рефлексія, атрибути        ║");
             Console.WriteLine("║ 10. Файли           — логи, звіти, імпорт        ║");
+            Console.WriteLine("║ 11. Звіти           — LINQ-аналітика та топи     ║");
             Console.WriteLine("║  0. Вийти                                        ║");
             Console.WriteLine("╚══════════════════════════════════════════════════╝");
             Console.Write("Оберіть: ");
@@ -110,6 +111,9 @@ class Program
                 case "10":
                     FilesMenu(clinic);
                     break;
+                case "11":
+                    ReportsMenu(clinic);
+                    break;
                 case "0":
                     clinic.Tracker.PrintSummary();
                     clinic.Tracker.SaveSummary();
@@ -132,6 +136,80 @@ class Program
     static void OnAppointmentBookedConsole(object? sender, AppointmentEventArgs e)
     {
         Console.WriteLine($"  [EVENT] Запис #{e.AppointmentId} створено: пацієнт #{e.PatientId} → лікар #{e.DoctorId}, {e.ScheduledAt:dd.MM.yyyy HH:mm}");
+    }
+
+    static void ReportsMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n── Звіти ──────────────────────────────");
+            Console.WriteLine("  1. Спеціальності");
+            Console.WriteLine("  2. Найзавантаженіший лікар");
+            Console.WriteLine("  3. Пацієнти з кількома візитами");
+            Console.WriteLine("  4. Топ-3 лікарів за виручкою");
+            Console.WriteLine("  5. Чи є термінові записи");
+            Console.WriteLine("  6. Активні спеціальності");
+            Console.WriteLine("  7. Виручка по місяцях");
+            Console.WriteLine("  0. Назад");
+            Console.Write("Оберіть: ");
+
+            string choice = Console.ReadLine() ?? "";
+            if (choice == "0") return;
+
+            if (choice == "1")
+            {
+                foreach (SpecialityReport report in clinic.Reports.GetSpecialityStats())
+                {
+                    Console.WriteLine($"  {report}");
+                }
+            }
+            else if (choice == "2")
+            {
+                string? name = clinic.Reports.FindBusiestDoctorName();
+                Console.WriteLine(name != null ? $"  Найзавантаженіший лікар: {name}" : "  немає лікарів");
+            }
+            else if (choice == "3")
+            {
+                Console.Write("Мінімальна кількість візитів: ");
+                if (!int.TryParse(Console.ReadLine(), out int minVisits) || minVisits <= 0)
+                {
+                    Console.WriteLine("Помилка: некоректне число.");
+                    continue;
+                }
+
+                foreach (string patientName in clinic.Reports.GetPatientsWithMultipleVisits(minVisits))
+                {
+                    Console.WriteLine($"  {patientName}");
+                }
+            }
+            else if (choice == "4")
+            {
+                int index = 1;
+                foreach (DoctorStats stat in clinic.Reports.GetTopEarners(3))
+                {
+                    Console.WriteLine($"  {index++}. {stat.FullName} — {stat.TotalRevenue:F2} грн");
+                }
+            }
+            else if (choice == "5")
+            {
+                bool hasUrgent = clinic.Reports.HasAnyUrgentAppointments();
+                Console.WriteLine(hasUrgent ? "  Так" : "  Ні");
+            }
+            else if (choice == "6")
+            {
+                foreach (Speciality spec in clinic.Reports.GetActiveSpecialities())
+                {
+                    Console.WriteLine($"  {ClinicFormatter.FormatSpeciality(spec)}");
+                }
+            }
+            else if (choice == "7")
+            {
+                foreach (var item in clinic.Reports.GetMonthlyRevenue())
+                {
+                    Console.WriteLine($"  {item.Year}/{item.Month:D2} — {item.Total:F2} грн");
+                }
+            }
+        }
     }
 
     static void FilesMenu(Clinic clinic)
