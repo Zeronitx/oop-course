@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClinicApp.Models;
 
 namespace ClinicApp.Managers;
@@ -19,61 +20,31 @@ public class AnalyticsManager
 
     public IEnumerable<DoctorStats> ComputeDoctorStats()
     {
-        Doctor[] allDoctors = _doctors.GetAll();
         Appointment[] allAppointments = _appointments.GetAll();
-
-        for (int i = 0; i < allDoctors.Length; i++)
+        return _doctors.GetAll().Select(d =>
         {
-            Doctor doc = allDoctors[i];
-            int count = 0;
-            decimal revenue = 0m;
-            DateTime lastDate = DateTime.MinValue;
-
-            for (int j = 0; j < allAppointments.Length; j++)
-            {
-                Appointment appt = allAppointments[j];
-                if (appt.DoctorId == doc.Id)
-                {
-                    count++;
-                    revenue += appt.GetCost();
-                    if (appt.ScheduledAt > lastDate)
-                    {
-                        lastDate = appt.ScheduledAt;
-                    }
-                }
-            }
-
-            yield return new DoctorStats(doc.Id, doc.FullName, count, revenue, lastDate);
-        }
+            var docAppts = allAppointments.Where(a => a.DoctorId == d.Id);
+            return new DoctorStats(
+                d.Id,
+                d.FullName,
+                docAppts.Count(),
+                docAppts.Sum(a => a.GetCost()),
+                docAppts.Any() ? docAppts.Max(a => a.ScheduledAt) : DateTime.MinValue);
+        });
     }
 
     public IEnumerable<PatientStats> ComputePatientStats()
     {
-        Patient[] allPatients = _patients.GetAll();
         Appointment[] allAppointments = _appointments.GetAll();
-
-        for (int i = 0; i < allPatients.Length; i++)
+        return _patients.GetAll().Select(p =>
         {
-            Patient pat = allPatients[i];
-            int count = 0;
-            decimal spent = 0m;
-            DateTime lastDate = DateTime.MinValue;
-
-            for (int j = 0; j < allAppointments.Length; j++)
-            {
-                Appointment appt = allAppointments[j];
-                if (appt.PatientId == pat.Id)
-                {
-                    count++;
-                    spent += appt.GetCost();
-                    if (appt.ScheduledAt > lastDate)
-                    {
-                        lastDate = appt.ScheduledAt;
-                    }
-                }
-            }
-
-            yield return new PatientStats(pat.Id, pat.FullName, count, spent, lastDate);
-        }
+            var patAppts = allAppointments.Where(a => a.PatientId == p.Id);
+            return new PatientStats(
+                p.Id,
+                p.FullName,
+                patAppts.Count(),
+                patAppts.Sum(a => a.GetCost()),
+                patAppts.Any() ? patAppts.Max(a => a.ScheduledAt) : DateTime.MinValue);
+        });
     }
 }
